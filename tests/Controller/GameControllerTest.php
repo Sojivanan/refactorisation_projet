@@ -10,15 +10,15 @@ class GameControllerTest extends WebTestCase
     use RecreateDatabaseTrait;
 
     /**
-     * @dataProvider dataprovider_getPartieList_checkAuthorizedMethods
+     * @dataProvider dataprovider_getListOfGames_checkAuthorizedMethods
      */
-    public function test_getPartieList_checkAuthorizedMethods($method){
+    public function test_getListOfGames_checkAuthorizedMethods($method){
         $client = static::createClient();
         $client->request($method, '/games');
         $this->assertEquals(405, $client->getResponse()->getStatusCode());
     }
 
-    private static function dataprovider_getPartieList_checkAuthorizedMethods(): array
+    private static function dataprovider_getListOfGames_checkAuthorizedMethods(): array
     {
         return [
             ['PUT'],
@@ -27,13 +27,13 @@ class GameControllerTest extends WebTestCase
         ];
     }
 
-     public function test_getPartieList_checkReturnStatus(){
+     public function test_getListOfGames_checkReturnStatus(){
         $client = static::createClient();
         $client->request('GET', '/games');
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
     }
 
-    public function test_getPartieList_checkValues(){
+    public function test_getListOfGames_checkValues(){
         $client = static::createClient();
         $client->request('GET', '/games');
 
@@ -101,13 +101,13 @@ class GameControllerTest extends WebTestCase
     /**
      * @dataProvider dataprovider_launchGame_checkStatusWithInvalidUserParam
      */
-    public function test_launchGame_checkStatusWithInvalidUserParam($userParam){
+    public function test_createGame_checkStatusWithInvalidUserParam($userParam){
         $client = static::createClient([], ['HTTP_X_USER_ID' => $userParam]);
         $client->request('POST', '/games');
         $this->assertEquals(401, $client->getResponse()->getStatusCode());
     }
 
-    private static function dataprovider_launchGame_checkStatusWithInvalidUserParam(): array
+    private static function dataprovider_createGame_checkStatusWithInvalidUserParam(): array
     {
         return [
             [''],
@@ -117,13 +117,13 @@ class GameControllerTest extends WebTestCase
         ];
     }
 
-    public function test_launchGame_checkStatusWhenValid(){
+    public function test_createGame_checkStatusWhenValid(){
         $client = static::createClient([], ['HTTP_X_USER_ID' => 1]);
         $client->request('POST', '/games');
         $this->assertEquals(201, $client->getResponse()->getStatusCode());
     }
 
-    public function test_launchGame_checkValuesWhenValid(){
+    public function test_createGame_checkValuesWhenValid(){
         $client = static::createClient([], ['HTTP_X_USER_ID' => 1]);
         $client->request('POST', '/games');
 
@@ -159,7 +159,7 @@ class GameControllerTest extends WebTestCase
     /**
      * @dataProvider dataprovider_inviteToGame_checkWithInvalidAuth
      */
-    public function test_inviteToGame_checkWithInvalidAuth($id){
+    public function test_addPlayerToGame_checkWithInvalidAuth($id){
         $client = static::createClient([], ['HTTP_X_USER_ID' => $id]);
         $client->request('PATCH', '/game/1/add/2');
         $this->assertEquals(401, $client->getResponse()->getStatusCode());

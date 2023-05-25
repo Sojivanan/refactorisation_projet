@@ -125,9 +125,10 @@ class GameController extends AbstractController
                     headers: ['Content-Type' => 'application/json;charset=UTF-8']
                 );
             }else{
-                return new JsonResponse('User not found', 404);
+                return new JsonResponse('User right not found', 404);
             }
         }else{
+
             if(ctype_digit($currentUserId) === false){
                 return new JsonResponse('User not found', 401);
             }
@@ -255,18 +256,6 @@ class GameController extends AbstractController
 
                 $entityManager->flush();
 
-
-
-
-
-
-
-
-
-
-
-
-
                 if($game->getPlayLeft() !== null){
 
                     switch($data['choice']){
@@ -322,7 +311,7 @@ class GameController extends AbstractController
         return new JsonResponse('coucou');
     }
 
-    #[Route('/game/{id}', name: 'annuler_game', methods:['DELETE'])]
+    #[Route('/game/{id}', name: 'delete_game', methods:['DELETE'])]
     public function deleteGame(EntityManagerInterface $entityManager, Request $request, $id): JsonResponse
     {
    
@@ -356,7 +345,7 @@ class GameController extends AbstractController
                 return new JsonResponse('User not found', 401);
             }
         }else{
-            return new JsonResponse('User not found', 401);
+            return new JsonResponse('Id is not a number', 401);
         }
     }
 }

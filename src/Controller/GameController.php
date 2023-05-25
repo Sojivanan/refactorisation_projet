@@ -15,24 +15,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 class GameController extends AbstractController
 {
     #[Route('/games', name: 'get_list_of_games', methods:['GET'])]
-    public function getPartieList(EntityManagerInterface $entityManager): JsonResponse
+    public function getListOfGames(EntityManagerInterface $entityManager): JsonResponse
     {
-        $data = $entityManager->getRepository(Game::class)->findAll();
+        $games = $entityManager->getRepository(Game::class)->findAll();
         return $this->json(
-            $data,
+            $games,
             headers: ['Content-Type' => 'application/json;charset=UTF-8']
         );
     }
 
     #[Route('/games', name: 'create_game', methods:['POST'])]
-    public function launchGame(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function createGame(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $currentUserId = $request->headers->get('X-User-Id');
 
         if($currentUserId !== null){
 
             if(ctype_digit($currentUserId) === false){
-                return new JsonResponse('User not found', 401);
+                return new JsonResponse('Its not an Integer', 401);
             }
 
             $currentUser = $entityManager->getRepository(User::class)->find($currentUserId);
@@ -42,25 +42,25 @@ class GameController extends AbstractController
                 return new JsonResponse('User not found', 401);
             }
 
-            $nouvelle_partie = new Game();
-            $nouvelle_partie->setState('pending');
-            $nouvelle_partie->setPlayerLeft($currentUser);
+            $newGame = new Game();
+            $newGame->setState('pending');
+            $newGame->setPlayerLeft($currentUser);
 
-            $entityManager->persist($nouvelle_partie);
+            $entityManager->persist($newGame);
 
             $entityManager->flush();
 
             return $this->json(
-                $nouvelle_partie,
+                $newGame,
                 201,
                 headers: ['Content-Type' => 'application/json;charset=UTF-8']
             );
-        }else{
+        } else {
             return new JsonResponse('User not found', 401);
         }
     }
 
-    #[Route('/game/{identifiant}', name: 'fetch_game', methods:['GET'])]
+    #[Route('/game/{identifiant}', name: ' getGameInfo', methods:['GET'])]
     public function getGameInfo(EntityManagerInterface $entityManager, $identifiant): JsonResponse
     {
         if(ctype_digit($identifiant)){
@@ -75,12 +75,12 @@ class GameController extends AbstractController
                 return new JsonResponse('Game not found', 404);
             }
         }else{
-            return new JsonResponse('Game not found', 404);
+            return new JsonResponse('identifiant not an Integer ', 404);
         }
     }
 
-    #[Route('/game/{id}/add/{playerRightId}', name: 'add_user_right', methods:['PATCH'])]
-    public function inviteToGame(Request $request, EntityManagerInterface $entityManager, $id, $playerRightId): JsonResponse
+    #[Route('/game/{id}/add/{playerRightId}', name: 'add_user_to_game', methods:['PATCH'])]
+    public function addPlayerToGame(Request $request, EntityManagerInterface $entityManager, $gameId, $playerRightId): JsonResponse
     {
         $currentUserId = $request->headers->get('X-User-Id');
 
@@ -88,7 +88,7 @@ class GameController extends AbstractController
             return new JsonResponse('User not found', 401);
         }
 
-        if(ctype_digit($id) && ctype_digit($playerRightId) && ctype_digit($currentUserId)){
+        if(ctype_digit($gameId) && ctype_digit($playerRightId) && ctype_digit($currentUserId)){
    
             $playerLeft = $entityManager->getRepository(User::class)->find($currentUserId);
 
@@ -96,7 +96,7 @@ class GameController extends AbstractController
                 return new JsonResponse('User not found', 401);
             }
 
-            $game = $entityManager->getRepository(Game::class)->find($id);
+            $game = $entityManager->getRepository(Game::class)->find($gameId);
 
             if($game === null){
                 return new JsonResponse('Game not found', 404);

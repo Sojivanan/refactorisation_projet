@@ -23,7 +23,7 @@ class GameController extends AbstractController
             headers: ['Content-Type' => 'application/json;charset=UTF-8']
         );
     }
-
+    
     #[Route('/games', name: 'create_game', methods:['POST'])]
     public function launchGame(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -332,7 +332,6 @@ class GameController extends AbstractController
                 }
 
                 // game search with either left or right player
-        
                 $game = $entityManager->getRepository(Game::class)->findOneBy(['id' => $id, 'playerLeft' => $player]);
 
                 if(empty($game)){

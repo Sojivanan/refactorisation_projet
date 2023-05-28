@@ -1,0 +1,3 @@
+<?php //App%255CController%255CGameController%2523getGameInfo
+
+return [PHP_INT_MAX, []];

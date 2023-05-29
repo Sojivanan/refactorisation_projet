@@ -15,7 +15,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class GameController extends AbstractController
 {
     #[Route('/games', name: 'get_list_of_games', methods:['GET'])]
-    public function getListOfGames(EntityManagerInterface $entityManager): JsonResponse
+    public function getPartieList(EntityManagerInterface $entityManager): JsonResponse
     {
         $games = $entityManager->getRepository(Game::class)->findAll();
         return $this->json(
@@ -23,9 +23,9 @@ class GameController extends AbstractController
             headers: ['Content-Type' => 'application/json;charset=UTF-8']
         );
     }
-
+    
     #[Route('/games', name: 'create_game', methods:['POST'])]
-    public function createGame(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function launchGame(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $currentUserId = $request->headers->get('X-User-Id');
 
@@ -37,7 +37,7 @@ class GameController extends AbstractController
 
             $currentUser = $entityManager->getRepository(User::class)->find($currentUserId);
 
-            // Si l'utilisateur n'existe pas -> stop creation de partie
+            // If user not found, don't create a game
             if($currentUser === null){
                 return new JsonResponse('User not found', 401);
             }
@@ -64,23 +64,27 @@ class GameController extends AbstractController
     public function getGameInfo(EntityManagerInterface $entityManager, $identifiant): JsonResponse
     {
         if(ctype_digit($identifiant)){
+            
             $party = $entityManager->getRepository(Game::class)->findOneBy(['id' => $identifiant]);
 
             if($party !== null){
+
                 return $this->json(
                     $party,
                     headers: ['Content-Type' => 'application/json;charset=UTF-8']
                 );
+
             }else{
+            
                 return new JsonResponse('Game not found', 404);
             }
         }else{
-            return new JsonResponse('identifiant not an Integer ', 404);
+            return new JsonResponse('identifiant is not an Integer ', 404);
         }
     }
 
     #[Route('/game/{id}/add/{playerRightId}', name: 'add_user_to_game', methods:['PATCH'])]
-    public function addPlayerToGame(Request $request, EntityManagerInterface $entityManager, $gameId, $playerRightId): JsonResponse
+    public function inviteToGame(Request $request, EntityManagerInterface $entityManager, $id, $playerRightId): JsonResponse
     {
         $currentUserId = $request->headers->get('X-User-Id');
 
@@ -88,7 +92,7 @@ class GameController extends AbstractController
             return new JsonResponse('User not found', 401);
         }
 
-        if(ctype_digit($gameId) && ctype_digit($playerRightId) && ctype_digit($currentUserId)){
+        if(ctype_digit($id) && ctype_digit($playerRightId) && ctype_digit($currentUserId)){
    
             $playerLeft = $entityManager->getRepository(User::class)->find($currentUserId);
 
@@ -96,7 +100,7 @@ class GameController extends AbstractController
                 return new JsonResponse('User not found', 401);
             }
 
-            $game = $entityManager->getRepository(Game::class)->find($gameId);
+            $game = $entityManager->getRepository(Game::class)->find($id);
 
             if($game === null){
                 return new JsonResponse('Game not found', 404);
@@ -125,9 +129,10 @@ class GameController extends AbstractController
                     headers: ['Content-Type' => 'application/json;charset=UTF-8']
                 );
             }else{
-                return new JsonResponse('User not found', 404);
+                return new JsonResponse('User right not found', 404);
             }
         }else{
+
             if(ctype_digit($currentUserId) === false){
                 return new JsonResponse('User not found', 401);
             }
@@ -195,7 +200,7 @@ class GameController extends AbstractController
 
             $data = $form->getData();
 
-            // on joue avec les règles de base de pierre feuille ciseaux
+            // we play with rock, paper or scissors rules
             if($data['choice'] !== 'rock' && $data['choice'] !== 'paper' && $data['choice'] !== 'scissors'){
                 return new JsonResponse('Invalid choice', 400);
             }
@@ -255,18 +260,6 @@ class GameController extends AbstractController
 
                 $entityManager->flush();
 
-
-
-
-
-
-
-
-
-
-
-
-
                 if($game->getPlayLeft() !== null){
 
                     switch($data['choice']){
@@ -319,24 +312,26 @@ class GameController extends AbstractController
             return new JsonResponse('Invalid choice', 400);
         }
 
-        return new JsonResponse('coucou');
+        return new JsonResponse('Round completed', 200);
     }
 
-    #[Route('/game/{id}', name: 'annuler_game', methods:['DELETE'])]
+    #[Route('/game/{id}', name: 'delete_game', methods:['DELETE'])]
     public function deleteGame(EntityManagerInterface $entityManager, Request $request, $id): JsonResponse
     {
    
         $currentUserId = $request->headers->get('X-User-Id');
 
         if(ctype_digit($currentUserId) === true){
+
             $player = $entityManager->getRepository(User::class)->find($currentUserId);
 
             if($player !== null){
 
                 if(ctype_digit($id) === false){
-                    return new JsonResponse('Game not found', 404);
+                    return new JsonResponse('Id is not a number', 404);
                 }
-        
+
+                // game search with either left or right player
                 $game = $entityManager->getRepository(Game::class)->findOneBy(['id' => $id, 'playerLeft' => $player]);
 
                 if(empty($game)){
@@ -350,13 +345,13 @@ class GameController extends AbstractController
                 $entityManager->remove($game);
                 $entityManager->flush();
 
-                return new JsonResponse(null, 204);
+                return new JsonResponse('Game deleted', 204);
 
             }else{
                 return new JsonResponse('User not found', 401);
             }
         }else{
-            return new JsonResponse('User not found', 401);
+            return new JsonResponse('Id is not a number', 401);
         }
     }
 }
